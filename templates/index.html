@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>آینه تیک‌تاک</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+        .tiktok-container {
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+        .video-item {
+            scroll-snap-align: start;
+            height: 100vh;
+            width: 100%;
+            position: relative;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .video-player {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .video-info {
+            position: absolute;
+            bottom: 100px;
+            left: 16px;
+            right: 100px;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+        .channel-name {
+            font-weight: bold;
+            margin-bottom: 4px;
+            font-size: 16px;
+        }
+        .caption {
+            font-size: 14px;
+            opacity: 0.9;
+            max-height: 60px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        .actions {
+            position: absolute;
+            bottom: 100px;
+            right: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            z-index: 10;
+        }
+        .action-btn {
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            border: none;
+            color: white;
+            font-size: 32px;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+        .action-btn:active {
+            transform: scale(0.92);
+        }
+        .action-btn.active {
+            color: #ff2a5e;
+        }
+        .views {
+            font-size: 12px;
+            text-align: center;
+            margin-top: 6px;
+            font-weight: 500;
+            color: white;
+            text-shadow: 0 0 2px black;
+        }
+        .video-controls {
+            position: absolute;
+            bottom: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 30px;
+            z-index: 20;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(12px);
+            padding: 8px 24px;
+            border-radius: 60px;
+            opacity: 0;
+            transition: opacity 0.25s;
+            pointer-events: none;
+        }
+        .video-item:hover .video-controls {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .ctrl-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 28px;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .ctrl-btn:hover {
+            background: rgba(255,255,255,0.4);
+            transform: scale(1.05);
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: white;
+            gap: 20px;
+        }
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .status-bar {
+            position: fixed;
+            bottom: 16px;
+            left: 16px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-family: monospace;
+            z-index: 20;
+        }
+        .sound-prompt {
+            position: fixed;
+            bottom: 120px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 30;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.3);
+            transition: 0.2s;
+        }
+        .sound-prompt:hover {
+            background: #ff2a5e;
+            border-color: #ff2a5e;
+        }
+        .text-placeholder {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 16px;
+            max-width: 80%;
+            text-align: center;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="tiktok-container" id="tiktokContainer"></div>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div id="loadingMessage">در حال بارگذاری...</div>
+    </div>
+    <div class="status-bar" id="statusMsg">📱 0 پست</div>
+    <div class="sound-prompt" id="soundPrompt">🔊 فعال‌سازی صدا</div>
+
+    <script>
+        let allPosts = [];           // تمام پست‌های دریافتی از سرور
+        let renderedCount = 0;       // تعداد پست‌های رندر شده
+        let isLoading = false;
+        let hasInitialLoad = false;
+        let userInteracted = false;
+        let currentActiveVideo = null;
+        let totalPosts = 0;
+        let noMore = false;
+        let currentOffset = 0;
+
+        const container = document.getElementById('tiktokContainer');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const statusDiv = document.getElementById('statusMsg');
+        const soundPrompt = document.getElementById('soundPrompt');
+
+        // فعال‌سازی سراسری صدا
+        function enableGlobalSound() {
+            if (userInteracted) return;
+            userInteracted = true;
+            soundPrompt.style.display = 'none';
+            if (currentActiveVideo) currentActiveVideo.muted = false;
+        }
+        soundPrompt.addEventListener('click', enableGlobalSound);
+        document.body.addEventListener('click', enableGlobalSound, { once: true });
+
+        // دریافت وضعیت
+        async function fetchStatus() {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                totalPosts = data.total_posts;
+                statusDiv.innerText = `📱 ${totalPosts} پست`;
+                if (totalPosts > 0 && !hasInitialLoad && !noMore) {
+                    fetchPosts();
+                } else if (totalPosts === 0) {
+                    document.getElementById('loadingMessage').innerText = 'هیچ پستی یافت نشد. صبر کنید...';
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        // دریافت پست‌های جدید از سرور
+        async function fetchPosts() {
+            if (isLoading || noMore) return;
+            isLoading = true;
+            try {
+                const res = await fetch(`/api/posts?offset=${currentOffset}`);
+                const newPosts = await res.json();
+                if (newPosts.length === 0) {
+                    noMore = true;
+                    isLoading = false;
+                    return;
+                }
+                if (!hasInitialLoad) {
+                    loadingOverlay.style.display = 'none';
+                    hasInitialLoad = true;
+                }
+                // اضافه کردن پست‌های جدید به آرایه اصلی
+                for (let p of newPosts) {
+                    if (!allPosts.some(ex => ex.id === p.id)) {
+                        allPosts.push(p);
+                    }
+                }
+                currentOffset += newPosts.length;
+                // رندر کردن پست‌های جدید (اگر کمتر از 5 تا مانده باشد)
+                renderNextPosts();
+            } catch(err) { console.error(err); }
+            isLoading = false;
+        }
+
+        // رندر کردن پست‌های بعدی (تا 3 تا جلوتر از پست فعال)
+        function renderNextPosts() {
+            // پیدا کردن ایندکس ویدیوی فعال
+            let activeIndex = -1;
+            const items = document.querySelectorAll('.video-item');
+            for (let i = 0; i < items.length; i++) {
+                const rect = items[i].getBoundingClientRect();
+                if (rect.top >= -100 && rect.top <= window.innerHeight/2) {
+                    activeIndex = i;
+                    break;
+                }
+            }
+            if (activeIndex === -1 && items.length > 0) activeIndex = 0;
+            
+            const targetRenderCount = (activeIndex === -1) ? 5 : activeIndex + 4;
+            // رندر کردن تا targetRenderCount
+            while (renderedCount < allPosts.length && renderedCount <= targetRenderCount) {
+                renderPost(allPosts[renderedCount]);
+                renderedCount++;
+            }
+        }
+
+        // رندر یک پست
+        function renderPost(post) {
+            const item = document.createElement('div');
+            item.className = 'video-item';
+            item.dataset.id = post.id;
+            const isVideo = /\.(mp4|webm|mov)/i.test(post.file_url) || post.file_url.includes('video') || post.file_url.includes('/download/');
+            const mediaHtml = isVideo ? 
+                `<video class="video-player" src="${post.file_url}" muted playsinline loop preload="none" referrerpolicy="no-referrer"></video>` :
+                `<img class="video-player" src="${post.file_url}" alt="content" loading="lazy">`;
+            const likeActive = post.liked ? 'active' : '';
+            const dislikeActive = post.disliked ? 'active' : '';
+            const viewsText = post.views ? formatNumber(post.views) : '';
+            item.innerHTML = `
+                ${mediaHtml}
+                <div class="video-info">
+                    <div class="channel-name">@${post.channel}</div>
+                    <div class="caption">${escapeHtml(post.text) || ''}</div>
+                </div>
+                <div class="actions">
+                    <div><button class="action-btn like-btn ${likeActive}" data-id="${post.id}">❤️</button><div class="views">${viewsText}</div></div>
+                    <div><button class="action-btn dislike-btn ${dislikeActive}" data-id="${post.id}">👎</button></div>
+                </div>
+            `;
+            container.appendChild(item);
+            const likeBtn = item.querySelector('.like-btn');
+            const dislikeBtn = item.querySelector('.dislike-btn');
+            likeBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleLike(post.id, true); });
+            dislikeBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleLike(post.id, false); });
+            const video = item.querySelector('video');
+            if (video) setupVideoPlayer(video, item);
+        }
+
+        // راه‌اندازی ویدیو با preload خودکار و مدیریت صدا
+        function setupVideoPlayer(video, containerDiv) {
+            video.playsInline = true;
+            video.loop = true;
+            video.preload = "none";  // شروع با none، بعداً با اینترسکشن لود می‌کنیم
+            video.setAttribute('referrerpolicy', 'no-referrer');
+            video.muted = true;
+
+            // وقتی ویدیو نزدیک می‌شود، preload را فعال کن
+            const preloadObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        video.preload = "metadata";
+                        video.load();
+                        preloadObserver.disconnect();
+                    }
+                });
+            }, { threshold: 0.1 });
+            preloadObserver.observe(containerDiv);
+
+            const attemptPlay = () => {
+                video.play().catch(e => console.log("autoplay blocked", e));
+            };
+            video.addEventListener('loadeddata', attemptPlay);
+            if (video.readyState >= 2) attemptPlay();
+
+            let retry = 0;
+            video.addEventListener('error', () => {
+                if (retry < 2) { retry++; setTimeout(() => { video.load(); attemptPlay(); }, 1000); }
+            });
+
+            addCustomControls(video, containerDiv);
+        }
+
+        function addCustomControls(video, containerDiv) {
+            if (containerDiv.querySelector('.video-controls')) return;
+            const controlsDiv = document.createElement('div');
+            controlsDiv.className = 'video-controls';
+            const playPauseBtn = document.createElement('button');
+            playPauseBtn.innerHTML = '⏸️';
+            playPauseBtn.className = 'ctrl-btn';
+            playPauseBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (video.paused) { video.play(); playPauseBtn.innerHTML = '⏸️'; } 
+                else { video.pause(); playPauseBtn.innerHTML = '▶️'; }
+            };
+            const volumeBtn = document.createElement('button');
+            volumeBtn.innerHTML = '🔇';
+            volumeBtn.className = 'ctrl-btn';
+            volumeBtn.onclick = (e) => {
+                e.stopPropagation();
+                video.muted = !video.muted;
+                volumeBtn.innerHTML = video.muted ? '🔇' : '🔊';
+                if (!video.muted && !userInteracted) {
+                    userInteracted = true;
+                    soundPrompt.style.display = 'none';
+                }
+            };
+            video.addEventListener('play', () => { playPauseBtn.innerHTML = '⏸️'; });
+            video.addEventListener('pause', () => { playPauseBtn.innerHTML = '▶️'; });
+            video.addEventListener('volumechange', () => { volumeBtn.innerHTML = video.muted ? '🔇' : '🔊'; });
+            controlsDiv.appendChild(playPauseBtn);
+            controlsDiv.appendChild(volumeBtn);
+            containerDiv.appendChild(controlsDiv);
+        }
+
+        function formatNumber(num) {
+            if (num >= 1_000_000) return (num/1_000_000).toFixed(1)+'M';
+            if (num >= 1000) return (num/1000).toFixed(1)+'K';
+            return num.toString();
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+        }
+
+        async function toggleLike(postId, isLike) {
+            const post = allPosts.find(p => p.id === postId);
+            if (!post) return;
+            const newLike = isLike ? !post.liked : false;
+            const newDislike = !isLike ? !post.disliked : false;
+            const item = document.querySelector(`.video-item[data-id="${postId}"]`);
+            if (item) {
+                const likeBtn = item.querySelector('.like-btn');
+                const dislikeBtn = item.querySelector('.dislike-btn');
+                if (newLike) { likeBtn.classList.add('active'); dislikeBtn.classList.remove('active'); }
+                else if (newDislike) { dislikeBtn.classList.add('active'); likeBtn.classList.remove('active'); }
+                else { likeBtn.classList.remove('active'); dislikeBtn.classList.remove('active'); }
+            }
+            try {
+                const url = isLike ? `/api/like/${postId}` : `/api/dislike/${postId}`;
+                await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ liked: newLike, disliked: newDislike }) });
+                post.liked = newLike; post.disliked = newDislike;
+            } catch(e) { console.error(e); }
+        }
+
+        // تشخیص ویدیوی فعال (برای صدا و رندر بعدی)
+        function updateActiveAndRender() {
+            const items = document.querySelectorAll('.video-item');
+            let bestItem = null, bestRatio = 0, bestIndex = -1;
+            for (let i = 0; i < items.length; i++) {
+                const rect = items[i].getBoundingClientRect();
+                const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+                const ratio = visibleHeight / rect.height;
+                if (ratio > bestRatio) {
+                    bestRatio = ratio;
+                    bestItem = items[i];
+                    bestIndex = i;
+                }
+            }
+            if (bestItem && bestRatio > 0.5) {
+                const newVideo = bestItem.querySelector('video');
+                if (newVideo && newVideo !== currentActiveVideo) {
+                    if (currentActiveVideo) currentActiveVideo.muted = true;
+                    currentActiveVideo = newVideo;
+                    if (userInteracted) currentActiveVideo.muted = false;
+                    else currentActiveVideo.muted = true;
+                    currentActiveVideo.play().catch(e => console.log(e));
+                }
+                // رندر کردن 3 ویدیوی بعدی
+                const needRenderUpTo = bestIndex + 4;
+                while (renderedCount < allPosts.length && renderedCount <= needRenderUpTo) {
+                    renderPost(allPosts[renderedCount]);
+                    renderedCount++;
+                }
+                // اگر به انتهای رندر شده نزدیک شدیم، پست جدید بگیر
+                if (renderedCount >= allPosts.length - 3 && !isLoading && !noMore) {
+                    fetchPosts();
+                }
+            }
+        }
+
+        let scrollTimeout;
+        function onScrollHandler() {
+            if (scrollTimeout) clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                updateActiveAndRender();
+            }, 100);
+        }
+
+        container.addEventListener('scroll', onScrollHandler);
+        window.addEventListener('resize', updateActiveAndRender);
+        setTimeout(updateActiveAndRender, 500);
+
+        fetchStatus();
+        setInterval(fetchStatus, 5000);
+    </script>
+</body>
+</html>

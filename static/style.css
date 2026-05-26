@@ -1,0 +1,132 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    background: #000;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+}
+.tiktok-container {
+    height: 100vh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+}
+.video-item {
+    scroll-snap-align: start;
+    height: 100vh;
+    width: 100%;
+    position: relative;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.video-player {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.video-info {
+    position: absolute;
+    bottom: 100px;
+    left: 16px;
+    right: 100px;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    z-index: 10;
+}
+.channel-name {
+    font-weight: bold;
+    margin-bottom: 4px;
+    font-size: 16px;
+}
+.caption {
+    font-size: 14px;
+    opacity: 0.9;
+}
+.actions {
+    position: absolute;
+    bottom: 100px;
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    z-index: 10;
+}
+.action-btn {
+    background: rgba(0,0,0,0.5);
+    border: none;
+    color: white;
+    font-size: 28px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: transform 0.1s ease;
+}
+.action-btn:active {
+    transform: scale(0.95);
+}
+.action-btn.active {
+    color: #ff2a5e;
+}
+.views {
+    font-size: 12px;
+    text-align: center;
+    margin-top: 4px;
+}
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    color: white;
+    gap: 20px;
+}
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+.status-bar {
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    background: rgba(0,0,0,0.6);
+    color: #0f0;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-family: monospace;
+    z-index: 20;
+    backdrop-filter: blur(4px);
+}
+.text-placeholder {
+    background: #1a1a1a;
+    padding: 20px;
+    border-radius: 16px;
+    max-width: 80%;
+    text-align: center;
+    color: white;
+}
