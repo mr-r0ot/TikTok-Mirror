@@ -41,10 +41,6 @@ python scraper.py --full
 
 # Just update and check for new posts
 python scraper.py
-
-
-# این نسخه با سلنیوم نوشته شده است و بسیار کند است و در مواقعی که خزنده معمولی کار نم  کند احتماا جواب دهد
-python scraper_hard.py
 ```
 
 # اجرا کننده ها
