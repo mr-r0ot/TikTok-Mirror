@@ -32,6 +32,7 @@ python main.py
 python offline.py
 # chose your dir and .html file name
 ```
+ا[ینجا از قبل یه خروجی با 50,000x پست ساخته و قابل دانلود هست](https://github.com/mr-r0ot/TikTok-Mirror/releases/tag/new-offline-html) 
 
 # خزنده ها
 این فایل در mirror ها می خزند و اطلاعات را بروز نگه می دارند یا در صورت افزودن آینه جدید تمام محتوای آینه را می گیرند و در posts.json ذخیره می کنند و همچنین آخرین دیتا دریافتی در channel.json ثبت می شود
