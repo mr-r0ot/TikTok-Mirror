@@ -30,7 +30,7 @@ python main.py
 می توانید نسخه .html آفلاین(با اینترانت ایرن کار می کند) و بدون نیاز به vpn یا پایتون ایجاد کنید و روی هر دستگاهی اجرا کنید
 ```
 python offline.py
-# chose your dir and .html file name
+# choose your dir and .html file name
 ```
 ا[ینجا از قبل یه خروجی با 50,000x پست ساخته و قابل دانلود هست](https://github.com/mr-r0ot/TikTok-Mirror/releases/tag/new-offline-html) 
 
